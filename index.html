@@ -1,0 +1,228 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Identificación de 4, 5 y 8 Justas Ascendentes y Descendentes</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            background-color: #f0f0f0;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+            margin: 0;
+        }
+        .container {
+            text-align: center;
+            background-color: white;
+            padding: 40px;
+            border-radius: 12px;
+            box-shadow: 0px 4px 8px rgba(0, 0, 0, 0.1);
+        }
+        h1 {
+            color: #333;
+            margin-bottom: 20px;
+        }
+        h2 {
+            color: #555;
+            margin: 10px 0;
+            font-size: 24px;
+        }
+        .button-container, .response-container {
+            margin: 20px 0;
+        }
+        button {
+            padding: 15px 30px;
+            margin: 10px;
+            font-size: 18px;
+            border-radius: 8px;
+            border: none;
+            background-color: #4CAF50;
+            color: white;
+            cursor: pointer;
+        }
+        button:hover {
+            background-color: #45a049;
+        }
+        .response-container p {
+            font-size: 20px;
+            font-weight: bold;
+            color: #333;
+        }
+        footer {
+            margin-top: 30px;
+            font-size: 16px;
+            color: #333;
+            font-weight: bold;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h2>AUDITIVA</h2>
+        <h1>Identificación de 4, 5 y 8 Justas Ascendentes y Descendentes</h1>
+        <div class="button-container">
+            <button id="playIntervalButton" onclick="playInterval()">Reproducir Intervalo</button>
+        </div>
+        <div class="button-container">
+            <button id="cuartaButton" onclick="playResponseAudio('cuarta')">Cuarta Justa</button>
+            <button id="quintaButton" onclick="playResponseAudio('quinta')">Quinta Justa</button>
+            <button id="octavaButton" onclick="playResponseAudio('octava')">Octava Justa</button>
+        </div>
+        <div class="button-container">
+            <button id="nextButton" onclick="nextExercise()">Siguiente</button>
+        </div>
+        <div class="response-container">
+            <p id="result"></p>
+        </div>
+        <div class="response-container">
+            <p>Aciertos: <span id="correctCount">0</span></p>
+            <p>Errores: <span id="incorrectCount">0</span></p>
+        </div>
+        <footer>
+            Profesor: José Arturo Lozano
+        </footer>
+    </div>
+
+    <script>
+        var correctAnswer = '';
+        var correctCount = 0;
+        var incorrectCount = 0;
+        var currentAudio = null;
+        var currentKey = '';
+        var hasAnswered = false;
+        var maxRetries = 3;
+
+        var notes = ['C', 'C#', 'D', 'D#', 'E', 'F', 'F#', 'G', 'G#', 'A', 'A#', 'B'];
+
+        var intervals = {
+            'cuarta': {
+                'asce': {},
+                'desce': {}
+            },
+            'quinta': {
+                'asce': {},
+                'desce': {}
+            },
+            'octava': {
+                'asce': {},
+                'desce': {}
+            }
+        };
+
+        // Precargar archivos de audio
+        notes.forEach(function(note) {
+            var cuartaAsceAudio = new Audio('4J ASCE-' + note + '.mp3');
+            var cuartaDesceAudio = new Audio('4J DES-' + note + '.mp3');
+            var quintaAsceAudio = new Audio('5J ASCE-' + note + '.mp3');
+            var quintaDesceAudio = new Audio('5J DES-' + note + '.mp3');
+            var octavaAsceAudio = new Audio('8J ASCE-' + note + '.mp3');
+            var octavaDesceAudio = new Audio('8J DES-' + note + '.mp3');
+
+            intervals['cuarta']['asce'][note] = cuartaAsceAudio;
+            intervals['cuarta']['desce'][note] = cuartaDesceAudio;
+            intervals['quinta']['asce'][note] = quintaAsceAudio;
+            intervals['quinta']['desce'][note] = quintaDesceAudio;
+            intervals['octava']['asce'][note] = octavaAsceAudio;
+            intervals['octava']['desce'][note] = octavaDesceAudio;
+
+            [cuartaAsceAudio, cuartaDesceAudio, quintaAsceAudio, quintaDesceAudio, octavaAsceAudio, octavaDesceAudio].forEach(function(audio) {
+                audio.addEventListener('canplaythrough', function() {
+                    console.log('Audio ' + audio.src + ' listo para reproducir.');
+                }, false);
+
+                audio.addEventListener('error', function() {
+                    console.error('Error al cargar el audio ' + audio.src);
+                });
+            });
+        });
+
+        function getRandomNote() {
+            return notes[Math.floor(Math.random() * notes.length)];
+        }
+
+        function getRandomIntervalType() {
+            var randomValue = Math.random();
+            if (randomValue < 0.33) {
+                return 'cuarta';
+            } else if (randomValue < 0.66) {
+                return 'quinta';
+            } else {
+                return 'octava';
+            }
+        }
+
+        function getRandomDirection() {
+            var randomValue = Math.random();
+            return randomValue < 0.5 ? 'asce' : 'desce';  // Ascendente o descendente
+        }
+
+        function playInterval(retryCount = 0) {
+            if (!currentAudio) {
+                var intervalType = getRandomIntervalType();  // Selección aleatoria entre 4ta, 5ta, 8va
+                var direction = getRandomDirection();  // Selección aleatoria entre ascendente y descendente
+                currentKey = getRandomNote();
+                currentAudio = intervals[intervalType][direction][currentKey];
+
+                correctAnswer = intervalType + '-' + direction;
+            }
+
+            currentAudio.currentTime = 0;
+            currentAudio.play().catch(error => {
+                console.error('Error al reproducir el audio:', error);
+                if (retryCount < maxRetries) {
+                    playInterval(retryCount + 1);
+                }
+            });
+
+            hasAnswered = false;
+            document.getElementById('result').textContent = '';
+        }
+
+        function playResponseAudio(answer, retryCount = 0) {
+            if (!currentKey) return;
+
+            var direction = correctAnswer.split('-')[1];  // Obtener la dirección de la respuesta correcta
+            var responseAudio = intervals[answer][direction][currentKey];
+            responseAudio.currentTime = 0;
+            responseAudio.play().then(() => {
+                checkAnswer(answer);  // Comprobar la respuesta después de reproducir el audio
+            }).catch(error => {
+                console.error('Error al reproducir el audio de respuesta:', error);
+                if (retryCount < maxRetries) {
+                    playResponseAudio(answer, retryCount + 1);
+                }
+            });
+        }
+
+        function checkAnswer(answer) {
+            if (hasAnswered) return;
+
+            var resultElement = document.getElementById('result');
+            if (answer === correctAnswer.split('-')[0]) {  // Comprobar solo el tipo de intervalo
+                resultElement.textContent = '¡Correcto! Era una ' + correctAnswer.replace('-', ' ');
+                resultElement.style.color = 'green';
+                correctCount++;
+                document.getElementById('correctCount').textContent = correctCount;
+            } else {
+                resultElement.textContent = 'Incorrecto. Era una ' + correctAnswer.replace('-', ' ');
+                resultElement.style.color = 'red';
+                incorrectCount++;
+                document.getElementById('incorrectCount').textContent = incorrectCount;
+            }
+
+            hasAnswered = true;
+        }
+
+        function nextExercise() {
+            currentAudio = null;
+            currentKey = '';
+            hasAnswered = false;
+
+            document.getElementById('result').textContent = '';
+        }
+    </script>
+</body>
+</html>
